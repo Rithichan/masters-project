@@ -42,7 +42,7 @@ density_matrix = np.kron(sys_initial,state_env)
 propagator = np.cos(dt)*identity_x4 - 1j*np.sin(dt)*H
 propagator_dagger = propagator.conj().T
 
-while t < 2*np.pi:
+while t < 4*np.pi:
 
     density_matrix_dt = np.matmul(propagator,(np.matmul(density_matrix,propagator_dagger)))
     density_matrix_dt = np.asarray(density_matrix_dt)
@@ -63,18 +63,15 @@ Replace and separate sys and env at each step
 '''
 
 t = 0
-dt = 0.2
+dt = 0.1
 
 data1 = []
 time1 = []
 
 rho_s = sys_initial = np.outer(zero_basis,zero_basis)
 
-while t < 2*np.pi:
-    
-    psi_env = np.cos(2*t)*zero_basis + np.sin(2*t)*one_basis
-    state_env = np.outer(psi_env,psi_env)
-    
+while t < 4*np.pi:
+
     psi_env = np.cos(t)*zero_basis + np.sin(t)*one_basis
     state_env = np.outer(psi_env,psi_env)
 
@@ -88,7 +85,6 @@ while t < 2*np.pi:
 
     density_matrix_dt = density_matrix_dt.reshape([2,2,2,2])
     rho_s = np.trace(density_matrix_dt, axis1=1, axis2=3)
-    rho_e = state_env
     
     exp_sigz = np.matrix.trace((np.matmul(rho_s,pauli_z)))
     data1.append(exp_sigz.item())
@@ -101,7 +97,7 @@ fig, ax = plt.subplots(figsize=(8, 6))
 
 # Plot the data
 ax.plot(time, data, label="Expectation pauli z", color="blue", linewidth=2)
-ax.plot(time1, data1, label="Expectation pauli z replace (dt=0.2)", color="red", linewidth=2)
+ax.plot(time1, data1, label=f"Expectation pauli z replace (dt={dt})", color="red", linewidth=2)
 
 # Add title and labels with proper font size
 ax.set_title("Evolution of system", fontsize=16, pad=15)
