@@ -1,9 +1,10 @@
-
 # -*- coding: utf-8 -*-
 """
 Created on Thu Nov 21 15:30:50 2024
 
 @author: rithi
+
+Collisional Model for generally correlated ancilla states.
 """
 
 import numpy as np
@@ -18,8 +19,8 @@ from qutip import ptrace, Qobj, tensor, ket2dm, sigmaz, sigmax, sigmay, qeye, ba
 '''
 
 len_states = 10
-dt = 0.01
-p = 0.001 # Example value, adjust as needed
+dt = 0.5
+p = 0.1 # Example value, adjust as needed
 zs = basis(2, 0)  # |0⟩ in computational basis
 os = basis(2, 1)  # |1⟩ in computational basis
 
@@ -44,7 +45,7 @@ tensor_q[0,0,1] = np.sqrt(1-p)
 tensor_q[0,1,1] = 0
 
 tensor_q[1,0,0] = 0
-tensor_q[1,1,0] = -np.sqrt(1-p)
+tensor_q[1,1,0] = np.sqrt(1-p)
 tensor_q[1,0,1] = 0
 tensor_q[1,1,1] = np.sqrt(p)
 
@@ -71,10 +72,16 @@ def random_unitary(seed=None):
     return q
 
 
-#operation
-theta = 1.30 #defines entanglement
-H_op = np.array([[1, 0, 0, 0],
-                 [0, 1, 0, 0],
+theta = 0.005 #defines entanglement
+H_op = np.array([[np.cos(theta) + 1j*np.sin(theta), 0, 0, 0],
+                 [0, np.cos(theta) - 1j*np.sin(theta), 0, 0],
+                 [0, 0, np.cos(theta), -np.sin(theta)],
+                 [0, 0, np.sin(theta), np.cos(theta)]])
+
+
+#|1><1| cross R(theta)
+H_op = np.array([[0,0,0,0],
+                 [0,0,0,0],
                  [0, 0, np.cos(theta), -np.sin(theta)],
                  [0, 0, np.sin(theta), np.cos(theta)]])
 
@@ -145,9 +152,9 @@ def run_model_uncorr(sys_state,len_sites,dt,measurement,H_op):
     operator_dag = H_op.dag()
     exp_data = []
     while i < len_sites:
-        comb = tensor(sys,Qobj(0.5*qeye(2)))
+        comb = tensor(Qobj(0.5*qeye(2)),sys)
         result = operator * comb * operator_dag
-        sys = ptrace(result,0)
+        sys = ptrace(result,1)
         exp_data.append((sys * measurement).tr())
         i += 1
     return exp_data,steps
@@ -295,9 +302,9 @@ def run_model_uncompute(state,len_states,dt,measurement,H_op):
 ---simulate---
 '''
 
-steps_corr,exp_data_corr,sites_full = run_model_full_new(state, 10,dt,sigmax(),H_op)
-exp_data_uncomp,steps_uncomp,sites_reduced = run_model_uncompute(state, 50, dt, sigmax(), H_op)
-exp_data_uncor,steps_uncor = run_model_uncorr(sys_state, 50, dt, sigmax(), H_op)
+steps_corr,exp_data_corr,sites_full = run_model_full_new(state, 10,dt,sigmaz(),H_op)
+exp_data_uncomp,steps_uncomp,sites_reduced = run_model_uncompute(state, 30, dt, sigmaz(), H_op)
+exp_data_uncor,steps_uncor = run_model_uncorr(sys_state, 30, dt, sigmaz(), H_op)
 #data_sites_full = unpack_sites(sites_full)
 
 '''
@@ -305,31 +312,41 @@ exp_data_uncor,steps_uncor = run_model_uncorr(sys_state, 50, dt, sigmax(), H_op)
 '''
 
 # Create the figure and axis objects
-fig, ax = plt.subplots(figsize=(8, 6))
+plt.rc('font', family='Times New Roman')
+fig, ax = plt.subplots(figsize=(10, 8))
 
 # Plot the data
-ax.plot(steps_uncor, exp_data_uncor, label="Expectation pauli x uncorrelated", color="blue", linewidth=2)
-ax.plot(steps_uncomp, exp_data_uncomp, label="Expectation pauli x with uncomp", color="red", linewidth=2, linestyle='-.')
-ax.plot(steps_corr, exp_data_corr, label="Expectation pauli x with full state", color="black", linewidth=2, linestyle='--')
+ax.plot(steps_uncor, exp_data_uncor, label="Expectation-z uncorrelated", color="blue", linewidth=2)
+ax.plot(steps_uncomp, exp_data_uncomp, label="Expectation-z with proposed method", color="red", linewidth=2, linestyle='-.')
+ax.plot(steps_corr, exp_data_corr, label="Expectation-z with full state", color="black", linewidth=2, linestyle='--')
 
 # Add title and labels with proper font size
-ax.set_title("Evolution of system", fontsize=16, pad=15)
-ax.set_xlabel("Steps (collision with ith env state)", fontsize=14)
-ax.set_ylabel("Expectation value", fontsize=14)
+ax.set_title("Evolution of system over N collisions", fontsize=20, pad=15)
+ax.set_xlabel("Steps (collision with N-th env state)", fontsize=16)
+ax.set_ylabel("Expectation value", fontsize=16)
 
 # Add a grid for better readability
 ax.grid(True, which='both', linestyle='--', linewidth=0.5)
 
 # Add a legend with a frame
-ax.legend(loc='lower right', fontsize=10)
+
+# Get existing handles and labels
+handles, labels = plt.gca().get_legend_handles_labels()
+
+# Add extra text
+extra_text = fr'$p = {p}, \theta = {theta}, $' + r'$\hat{U} = |1><1| \otimes R(\theta)$'
+handles.insert(3, plt.Line2D([], [], color='none', label=extra_text))  # Add dummy handle
+labels.insert(3, extra_text)
+
+ax.legend(handles, labels, loc='upper right', fontsize=16)
 
 
 # Increase the ticks font size for better visibility
-ax.tick_params(axis='both', which='major', labelsize=12)
+ax.tick_params(axis='both', which='major', labelsize=15)
 
 # Set tighter layout for padding
 plt.tight_layout(pad=2)
 
-#plt.savefig("Evolution of expectation pauli z.jpg",dpi=200)
+#plt.savefig("Evolution ex-z comparison A-matrix, p=0.1.jpg",dpi=200)
 # Show the plot
-plt.show()   
+plt.show()
