@@ -1,4 +1,4 @@
-### Masters project: Collisional model methods for modeling memoryful quantum dynamics
+### Masters project: Collisional model methods for modeling memoryful open quantum dynamics
 
 1. Unitary Operation
 - Shows some unitary evolution of combined system over time.
@@ -10,3 +10,6 @@
 
 3. Uncompute
 - Using the adjoint of the left/right unitary from SVD, can reduce the size of the tensor and reduce it to an identity type object, while leaving the forward states intact.
+
+Models:
+- Toy Model to test method.
