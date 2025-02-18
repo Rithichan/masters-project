@@ -1,5 +1,7 @@
 ### Masters project: Collisional model methods for modeling memoryful open quantum dynamics
 
+##Modelling Collisional models in state vector formulation of QM
+
 1. Unitary Operation
 - Shows some unitary evolution of combined system over time.
 - Comparison between joint system evolution vs separating system and operating.
