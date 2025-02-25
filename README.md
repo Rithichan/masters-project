@@ -1,4 +1,4 @@
-### Masters project: Collisional model methods for modeling memoryful open quantum dynamics
+# Masters project: Collisional model methods for modeling memoryful open quantum dynamics
 
 ## Semester1: Modelling Non Markovian Collisional models in state vector formulation of QM
 
