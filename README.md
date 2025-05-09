@@ -17,4 +17,4 @@ Code:
 - Test Models
 - Fully working code in Collisional_model_simulator.py
 
-## Semester2: In progress
+## Semester2: Simulation of spin-boson model via TEDOPA
